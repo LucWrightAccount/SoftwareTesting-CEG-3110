@@ -3,6 +3,8 @@ package diceroller;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+//Version 1
+//9-15-2025
 public class DiceDriver {
     public static void main(String[] args) {
         ArrayList<Integer> diceArr = new ArrayList<>();
