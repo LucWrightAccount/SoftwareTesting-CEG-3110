@@ -4,77 +4,72 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-
-
-//Version 1
-//9-15-2025 4:22pm
 public class DiceRandomnessChecker {
-    List<Integer> arr;
-    HashMap<Integer, Integer> map = new HashMap<>();
-    HashMap<Integer, Integer> consectiveRolls = new HashMap<>();
+    private final ArrayList<Integer> arr;
+    private final HashMap<Integer, Integer> map = new HashMap<>();
+    private final HashMap<Integer, Integer> consecutiveRolls = new HashMap<>();
 
-
-    //Passes An array though Random Checker to be used with methods
-    public DiceRandomnessChecker(List<Integer> arr){
+    public DiceRandomnessChecker(ArrayList<Integer> arr) {
         this.arr = arr;
         counter();
-        chiSqrTest();
-
     }
-    
 
-    //Chi-Sqr Test
-    public double chiSqrTest(){
+    // Chi-Square Test
+    public double chiSqrTest() {
         int n = arr.size();
-        double expected = (double) n/6.0; // expected rolls
-        double chiSquare =0.0;
+        if (n == 0) return 0.0;
 
-        for(int i =0; i <=6; i ++){
-          int observed = map.get(i);
-          chiSquare+=Math.pow(observed - expected, 2)/expected;
+        double expected = (double) n / 6.0;
+        double chiSquare = 0.0;
 
-
+        for (int i = 1; i <= 6; i++) {
+            int observed = map.getOrDefault(i, 0);
+            chiSquare += Math.pow(observed - expected, 2) / expected;
         }
         return chiSquare;
-
-
     }
 
-    //Uniform Distribution Test
-    public void uniDisTest(){
+    // Count frequency & consecutive streaks
+    private void counter() {
+        map.clear();
+        consecutiveRolls.clear();
 
-    }
+        if (arr == null || arr.isEmpty()) return;
 
-    //Creates a hash map of to determin frequency
+        // count the first element
+        int first = arr.get(0);
+        map.put(first, 1);
 
-    //TODO: figure out consecutive rolls
-    public void counter(){
-      int previous =0;
-      int countOcc =0;
+        int countOcc = 1;
+        for (int i = 1; i < arr.size(); i++) {
+            int previous = arr.get(i - 1);
+            int current = arr.get(i);
 
-       for(int num: arr){
-        
-        while(previous == num){
-          countOcc++;
+            // frequency map: count current
+            map.put(current, map.getOrDefault(current, 0) + 1);
 
+            // consecutive streaks
+            if (previous == current) {
+                countOcc++;
+            } else {
+                // record the streak of length countOcc
+                consecutiveRolls.put(countOcc, consecutiveRolls.getOrDefault(countOcc, 0) + 1);
+                countOcc = 1;
+            }
         }
-        consectiveRolls.getOrDefault(previous, )
-        countOcc = 0;
 
-         map.put(num, map.getOrDefault(num, 0) + 1);
-         int previous = arr.get(num);
-       }
-
-
+        // record final streak
+        consecutiveRolls.put(countOcc, consecutiveRolls.getOrDefault(countOcc, 0) + 1);
     }
 
-    
-    public void printRandom(){
-
-    
-
+    // Debug / validation helper
+    public void validateAndPrint() {
+        System.out.println("Array Size: " + arr.size());
+        int sumFreq = map.values().stream().mapToInt(Integer::intValue).sum();
+        System.out.println("Frequency map (Distribution): " + map);
+        System.out.println("Sum of frequency map values = " + sumFreq);
+        System.out.println("Consecutive rolls (streakLength -> count): " + consecutiveRolls);
+        System.out.println("Chi-Square Test : " + chiSqrTest());
+        
     }
-
-
-    
 }
