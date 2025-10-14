@@ -1,0 +1,85 @@
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Scanner;
+
+public class DateRegistrationChecker {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter a date (YYYYMMDD): ");
+        String input = scanner.nextLine().trim();
+
+        // Validate format
+        if (input.length() != 8 || !input.matches("\\d{8}")) {
+            System.out.println("❌ Invalid format. Please enter date as YYYYMMDD.");
+            return;
+        }
+
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            LocalDate date = LocalDate.parse(input, formatter);
+
+            System.out.println("\n✅ Date entered: " +
+                date.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")));
+
+            String category = categorizeDate(date);
+            System.out.println("Registration Status: " + category);
+
+        } catch (DateTimeParseException e) {
+            System.out.println("❌ Invalid date entered.");
+        }
+    }
+
+    private static String categorizeDate(LocalDate date) {
+        int year = date.getYear();
+        LocalDate tDay = LocalDate.of(year, 4, 2); // Temporary placeholder
+
+        // --- Define ranges ---
+        LocalDate jun1 = LocalDate.of(year, 6, 1);
+        LocalDate sep30 = LocalDate.of(year, 9, 30);
+        LocalDate oct1 = LocalDate.of(year, 10, 1);
+        LocalDate oct31 = LocalDate.of(year, 10, 31);
+        LocalDate nov1 = LocalDate.of(year, 11, 1);
+        LocalDate febEnd = LocalDate.of(isLeapYear(year) ? year : year + 1, 2,
+                isLeapYear(year) ? 29 : 28);
+        LocalDate mar1 = LocalDate.of(year + 1, 3, 1);
+        LocalDate apr1 = LocalDate.of(year + 1, 4, 1);
+        LocalDate apr2 = LocalDate.of(year + 1, 4, 2);
+        LocalDate may31 = LocalDate.of(year + 1, 5, 31);
+
+        // Adjust year transitions
+        if (date.isAfter(sep30)) {
+            // Registration cycle moves into next year
+            febEnd = LocalDate.of(isLeapYear(year + 1) ? year + 1 : year + 1, 2,
+                    isLeapYear(year + 1) ? 29 : 28);
+            mar1 = LocalDate.of(year + 1, 3, 1);
+            apr1 = LocalDate.of(year + 1, 4, 1);
+            apr2 = LocalDate.of(year + 1, 4, 2);
+            may31 = LocalDate.of(year + 1, 5, 31);
+            jun1 = LocalDate.of(year + 1, 6, 1);
+            sep30 = LocalDate.of(year + 1, 9, 30);
+        }
+
+        // --- Determine category ---
+        if (!date.isBefore(jun1) && !date.isAfter(sep30)) {
+            return "Registration Not Open";
+        } else if (!date.isBefore(oct1) && !date.isAfter(oct31)) {
+            return "Super Early";
+        } else if (!date.isBefore(nov1) && !date.isAfter(febEnd)) {
+            return "Early";
+        } else if (!date.isBefore(mar1) && !date.isAfter(apr1)) {
+            return "Baseline";
+        } else if (!date.isBefore(apr2) && date.isBefore(tDay)) {
+            return "Late";
+        } else if (!date.isBefore(tDay) && !date.isAfter(may31)) {
+            return "Registration Closed";
+        } else {
+            return "❓ Date not in any registration range.";
+        }
+    }
+
+    private static boolean isLeapYear(int year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    }
+}
