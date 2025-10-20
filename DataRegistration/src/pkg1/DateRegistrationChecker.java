@@ -1,4 +1,5 @@
 package DataRegistration.src.pkg1;
+
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.Period;
@@ -59,7 +60,7 @@ public class DateRegistrationChecker {
         System.out.println("End");
     }
 
-    private static void UserInfo(LocalDate date) {
+    private static void UserInfo(LocalDate registrationDate) {
         Scanner input = new Scanner(System.in);
         System.out.println("\nYour information goes here:");
         UserInfo user = new UserInfo();
@@ -68,15 +69,23 @@ public class DateRegistrationChecker {
         printLastName();
         user.setlName(input.nextLine());
         printDOB();
-        // user.setDOB();
+        user.setDOB();
         printGender();
         user.setGender(input.nextLine());
         printEmail();
         user.setEmail(input.nextLine());
         printReg();
-        user.setTimeStamp(date);
+        user.setTimeStamp(registrationDate);
+        printRace();
+        user.setRaceType(input.nextLine());
         users.add(user);
+        input.close();
+        System.out.println(user.toString());
 
+    }
+
+    public static void printRace() {
+        System.out.println("Enter Race Type");
     }
 
     public static void printFirstName() {
@@ -106,45 +115,36 @@ public class DateRegistrationChecker {
     private static String categorizeDate(LocalDate date) {
         int year = date.getYear();
 
-        // Registration cycle boundaries
+        // Adjust year based on registration cycle
+        if (date.getMonthValue() <= 5) {
+            year -= 1; // Early-year dates belong to the previous year's cycle
+        } else if (date.isAfter(LocalDate.of(year, 9, 30))) {
+            year += 1; // Late-year dates belong to next year's cycle
+        }
+
+        boolean leap = isLeapYear(year);
         LocalDate jun1 = LocalDate.of(year, 6, 1);
         LocalDate sep30 = LocalDate.of(year, 9, 30);
         LocalDate oct1 = LocalDate.of(year, 10, 1);
         LocalDate oct31 = LocalDate.of(year, 10, 31);
         LocalDate nov1 = LocalDate.of(year, 11, 1);
-
-        // Handle leap year for February
-        boolean leap = isLeapYear(year + 1);
-        LocalDate febEnd = LocalDate.of(year + 1, 2, leap ? 29 : 28);
-
+        LocalDate febEnd = LocalDate.of(year + 1, 2, isLeapYear(year + 1) ? 29 : 28);
         LocalDate mar1 = LocalDate.of(year + 1, 3, 1);
-        LocalDate apr1 = LocalDate.of(year + 1, 4, 1);
-        LocalDate apr2 = LocalDate.of(year + 1, 4, 2);
-
-        // TDay (Thursday before 1st Saturday in May)
-        LocalDate tDay = getTDay(year + 1);
+        LocalDate apr30 = LocalDate.of(year + 1, 4, 30);
+        LocalDate raceDay = getRaceSaturday(year + 1);
+        LocalDate tDay = raceDay.minusDays(2);
         LocalDate may31 = LocalDate.of(year + 1, 5, 31);
 
-        // Adjust if date is after Sep (i.e., registration cycle crosses year)
-        if (date.isAfter(sep30)) {
-            febEnd = LocalDate.of(year + 1, 2, isLeapYear(year + 1) ? 29 : 28);
-            mar1 = LocalDate.of(year + 1, 3, 1);
-            apr1 = LocalDate.of(year + 1, 4, 1);
-            apr2 = LocalDate.of(year + 1, 4, 2);
-            tDay = getTDay(year + 1);
-            may31 = LocalDate.of(year + 1, 5, 31);
-        }
-
-        // Now test all date ranges
+        // --- Determine registration category ---
         if (!date.isBefore(jun1) && !date.isAfter(sep30)) {
             return "Registration Not Open";
         } else if (!date.isBefore(oct1) && !date.isAfter(oct31)) {
             return "Super Early";
         } else if (!date.isBefore(nov1) && !date.isAfter(febEnd)) {
             return "Early";
-        } else if (!date.isBefore(mar1) && !date.isAfter(apr1)) {
+        } else if (!date.isBefore(mar1) && !date.isAfter(apr30)) {
             return "Baseline";
-        } else if (!date.isBefore(apr2) && date.isBefore(tDay)) {
+        } else if (date.isAfter(apr30) && date.isBefore(tDay)) {
             return "Late";
         } else if (!date.isBefore(tDay) && !date.isAfter(may31)) {
             return "Registration Closed";
@@ -153,18 +153,24 @@ public class DateRegistrationChecker {
         }
     }
 
-    private static LocalDate getTDay(int year) {
-        LocalDate mayFirst = LocalDate.of(year, 5, 1);
-
-        LocalDate firstSaturday = mayFirst;
-        while (firstSaturday.getDayOfWeek() != java.time.DayOfWeek.SATURDAY) {
-            firstSaturday = firstSaturday.plusDays(1);
-        }
-        return firstSaturday.minusDays(2);
+    private static boolean isLeapYear(int year) {
+        return java.time.Year.of(year).isLeap();
     }
 
-    private static boolean isLeapYear(int year) {
-        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    private static LocalDate getRaceSaturday(int year) {
+        LocalDate may1 = LocalDate.of(year, 5, 1);
+        // Find first Saturday in May
+        while (may1.getDayOfWeek() != java.time.DayOfWeek.SATURDAY) {
+            may1 = may1.plusDays(1);
+        }
+
+        // If that Saturday is May 1–2 but Sunday is in April, skip to next Saturday
+        LocalDate sunday = may1.plusDays(1);
+        if (sunday.getMonthValue() != 5) {
+            may1 = may1.plusWeeks(1);
+        }
+
+        return may1; // The race Saturday
     }
 
 }
