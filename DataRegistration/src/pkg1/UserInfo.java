@@ -1,3 +1,4 @@
+package DataRegistration.src.pkg1;
 import java.time.LocalDate;
 
 public class UserInfo {
