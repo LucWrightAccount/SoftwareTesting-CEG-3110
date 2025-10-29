@@ -10,7 +10,7 @@ import java.util.Locale;
 
 public class UserInfo {
     NumberFormat usCurrencyFormat = NumberFormat.getCurrencyInstance(Locale.US);
-
+     
     private String fName, lName, gender, email, race, raceCost, racePeriod, race2;
     private LocalDate regDate1, raceDay, raceDay1, raceDay2, DOB;
     private int ageOnRaceDay;
@@ -198,8 +198,9 @@ public class UserInfo {
 
     // TODO: Age of Race(AKA: How old they will be when the race starts)
     public int AgeOnRaceDay() {
-        LocalDate actualRaceDay = (raceDay != null) ? raceDay : raceDay1;
-        return Period.between(this.DOB, actualRaceDay).getYears();
+        LocalDate run =  LocalDate.of(2025,5,1);
+        //LocalDate actualRaceDay = (raceDay != null) ? raceDay : raceDay1;
+        return Period.between(this.DOB, run).getYears();
     }
 
     public LocalDate raceDay(String raceType, int year) {
